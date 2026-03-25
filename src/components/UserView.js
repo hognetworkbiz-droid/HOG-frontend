@@ -107,6 +107,7 @@ function UserView({ appState, onAdminLoginClick, paymentCallback, onPaymentCallb
             handleCloseModal();
           }}
           onPaymentSuccess={handlePaymentSuccess}
+          appState={appState}
         />
       )}
 

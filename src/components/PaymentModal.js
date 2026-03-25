@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAppState } from '../hooks/useAppState';
+// import { useAppState } from '../hooks/useAppState';
 import { logPayment } from '../services/api';
 
-function PaymentModal({ plan, manualPayment, onClose, onSubmitManualPayment, onPaymentSuccess }) {
+function PaymentModal({ plan, manualPayment, onClose, onSubmitManualPayment, onPaymentSuccess, appState }) {
   const [showManualPayment, setShowManualPayment] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentResult, setPaymentResult] = useState(null);
-  const { addPendingPayment } = useAppState();
+  // const { addPendingPayment } = useAppState();
 
   const handlePaymentSuccess = useCallback(async (paymentReference) => {
     if (!email.trim()) {
@@ -55,25 +55,38 @@ function PaymentModal({ plan, manualPayment, onClose, onSubmitManualPayment, onP
     }
   }, [handlePaymentSuccess]);
 
-  const handleManualPaymentSubmit = (e) => {
+  const handleManualPaymentSubmit = async (e) => {
     e.preventDefault();
+
+    if (!email.trim()) {
+      alert('Please enter your email address for payment processing');
+      return;
+    }
 
     if (!phoneNumber.trim()) {
       alert('Please enter your phone number');
       return;
     }
 
-    const payment = {
-      planName: plan.data,
-      amount: plan.price,
-      phoneNumber: phoneNumber,
-      timestamp: new Date().toISOString()
-    };
+    try {
+      const paymentData = {
+        paymentReference: 'MANUAL-' + Date.now().toString() + '-' + Math.floor(Math.random() * 1000),
+        email: email.trim(),
+        dataPlanId: plan.id,
+        amount: plan.price,
+        isManual: true,
+        phoneNumber: phoneNumber
+      };
 
-    addPendingPayment(payment);
-    onSubmitManualPayment();
-    alert('Payment submitted! Admin will verify and approve shortly.');
-    onClose();
+      await logPayment(paymentData);
+      
+      onSubmitManualPayment();
+      alert('Payment submitted! Admin will verify and approve shortly. Your voucher will be sent to your email.');
+      onClose();
+    } catch (error) {
+      console.error('Failed to log manual payment', error);
+      alert('Failed to submit manual payment. Please try again.');
+    }
   };
 
   const handlePaystackClick = () => {
@@ -81,7 +94,7 @@ function PaymentModal({ plan, manualPayment, onClose, onSubmitManualPayment, onP
       alert('Please enter your email address for payment processing');
       return;
     }
-    // Store email and plan ID in session for payment completion
+    // Store email in session for payment completion
     sessionStorage.setItem('paymentEmail', email.trim());
     sessionStorage.setItem('paymentPlanId', plan.id);
   };

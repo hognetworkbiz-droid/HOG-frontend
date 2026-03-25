@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { useAppState } from '../hooks/useAppState';
+// import { useAppState } from '../hooks/useAppState';
+import { createAdminPlan, updateAdminPlan, deleteAdminPlan } from '../services/api';
 
 function AdminPlansTab({ appState, showToast }) {
-  const [plans, setPlans] = useState(appState.dataPlans);
+  const [plans] = useState(appState.dataPlans);
   const [editIndex, setEditIndex] = useState(null);
   const [formData, setFormData] = useState({
     data: '',
@@ -13,36 +14,42 @@ function AdminPlansTab({ appState, showToast }) {
     download: '',
     paymentLink: ''
   });
-  const { updateDataPlans } = useAppState();
+  // const { updateDataPlans } = useAppState();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newPlan = {
-      ...formData,
+      name: formData.data, // using data as name
+      dataLimit: formData.data, // keeping it as data limit too mapped
       price: parseFloat(formData.price),
-      devices: parseInt(formData.devices),
-      upload: parseFloat(formData.upload),
-      download: parseFloat(formData.download)
+      validity: formData.validity,
+      devices: parseInt(formData.devices) || 1,
+      upload: parseFloat(formData.upload) || 5,
+      download: parseFloat(formData.download) || 8,
+      paymentLink: formData.paymentLink
     };
 
-    let updatedPlans;
-    if (editIndex !== null) {
-      updatedPlans = [...plans];
-      updatedPlans[editIndex] = newPlan;
-      showToast('Plan updated!');
-    } else {
-      updatedPlans = [...plans, newPlan];
-      showToast('Plan added!');
+    try {
+      if (editIndex !== null) {
+        const planId = plans[editIndex].id;
+        if (planId) {
+          await updateAdminPlan(planId, newPlan);
+        }
+        showToast('Plan updated! Reloading...');
+      } else {
+        await createAdminPlan(newPlan);
+        showToast('Plan added! Reloading...');
+      }
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (err) {
+      console.error(err);
+      showToast('Error saving plan to backend.');
     }
-
-    setPlans(updatedPlans);
-    updateDataPlans(updatedPlans);
-    clearForm();
   };
 
   const handleEdit = (index) => {
@@ -50,12 +57,19 @@ function AdminPlansTab({ appState, showToast }) {
     setFormData(plans[index]);
   };
 
-  const handleDelete = (index) => {
-    if (window.confirm('Are you sure?')) {
-      const updatedPlans = plans.filter((_, i) => i !== index);
-      setPlans(updatedPlans);
-      updateDataPlans(updatedPlans);
-      showToast('Plan deleted!');
+  const handleDelete = async (index) => {
+    if (window.confirm('Are you sure you want to delete this plan?')) {
+      const planId = plans[index].id;
+      try {
+        if (planId) {
+          await deleteAdminPlan(planId);
+        }
+        showToast('Plan deleted! Reloading...');
+        setTimeout(() => window.location.reload(), 1500);
+      } catch (err) {
+        console.error(err);
+        showToast('Error deleting plan.');
+      }
     }
   };
 
@@ -135,10 +149,9 @@ function AdminPlansTab({ appState, showToast }) {
           <input
             type="url"
             name="paymentLink"
-            placeholder="Payment Link"
+            placeholder="Payment Link (e.g. Paystack Shop Link)"
             value={formData.paymentLink}
             onChange={handleInputChange}
-            required
             className="col-span-full px-3 py-2 border border-gray-600 rounded-lg bg-gray-700 text-white"
           />
           <button

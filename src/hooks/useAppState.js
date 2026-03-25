@@ -75,21 +75,27 @@ export const useAppState = () => {
           data: plan.dataLimit,
           price: parseFloat(plan.price),
           validity: plan.validity,
-          devices: 1, // Default value since not in API
-          upload: 5, // Default value since not in API
-          download: 8, // Default value since not in API
-          paymentLink: `https://paystack.shop/pay/${plan.id}`, // Placeholder
+          devices: plan.devices || 1,
+          upload: plan.upload || 5,
+          download: plan.download || 8,
+          paymentLink: plan.paymentLink || '',
           name: plan.name,
           isActive: plan.isActive
         }));
 
         setAppState(prevState => ({
           ...prevState,
-          siteName: "HOG Network", // Keep default or get from settings if available
+          siteName: settings.siteName || "HOG Network",
           logoDataUrl: settings.logoUrl || prevState.logoDataUrl,
           bgDataUrl: settings.backgroundUrl || prevState.bgDataUrl,
           whatsAppNumber: settings.contactPhone || prevState.whatsAppNumber,
           contactEmail: settings.contactEmail,
+          manualPayment: {
+            bankName: settings.manualPaymentBankName || prevState.manualPayment.bankName,
+            accountNumber: settings.manualPaymentAccountNumber || prevState.manualPayment.accountNumber,
+            accountName: settings.manualPaymentAccountName || prevState.manualPayment.accountName
+          },
+          notifications: settings.notifications || prevState.notifications,
           dataPlans: transformedPlans
         }));
 

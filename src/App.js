@@ -7,9 +7,16 @@ import AdminDashboardView from './components/AdminDashboardView';
 
 function AppContent() {
   const { appState, isLoading, error } = useAppState();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, isLoading: isAuthLoading } = useAuth();
   const [currentView, setCurrentView] = useState('user');
   const [paymentCallback, setPaymentCallback] = useState(null);
+
+  useEffect(() => {
+    // If auth finishes loading and we are logged in, restore admin dashboard immediately
+    if (!isAuthLoading && isAuthenticated() && currentView === 'user') {
+      setCurrentView('admin-dashboard');
+    }
+  }, [isAuthLoading, isAuthenticated, currentView]);
 
   useEffect(() => {
     // Check for Paystack payment callback
@@ -37,7 +44,7 @@ function AppContent() {
     setCurrentView('user');
   };
 
-  if (isLoading) {
+  if (isLoading || isAuthLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-950">
         <div className="text-white text-xl">Loading...</div>

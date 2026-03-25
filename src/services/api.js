@@ -1,13 +1,10 @@
 import axios from 'axios';
 
 const API_BASE_URL = 'https://hognetwork.onrender.com/api';
+// const API_BASE_URL = 'http://localhost:5000/api';
 
-// Create axios instance with base URL
 const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 // Request interceptor to add auth token
@@ -43,5 +40,19 @@ api.interceptors.response.use(
 export const getSiteSettings = () => api.get('/site/settings');
 export const getSitePlans = () => api.get('/site/plans');
 export const logPayment = (paymentData) => api.post('/site/log-payment', paymentData);
+
+// Admin API functions
+export const getAdminSettings = () => api.get('/admin/settings');
+export const updateAdminSettings = (data) => api.put('/admin/settings', data);
+export const getAdminPlans = () => api.get('/admin/plans');
+export const createAdminPlan = (data) => api.post('/admin/plans', data);
+export const updateAdminPlan = (id, data) => api.put(`/admin/plans/${id}`, data);
+export const deleteAdminPlan = (id) => api.delete(`/admin/plans/${id}`);
+export const getAdminVouchers = (dataPlanId) => api.get(`/admin/vouchers${dataPlanId ? `?dataPlanId=${dataPlanId}` : ''}`);
+export const addAdminVouchers = (data) => api.post('/admin/vouchers/bulk', data);
+
+export const getAdminPayments = (status) => api.get(`/admin/payments${status ? `?status=${status}` : ''}`);
+export const approveAdminPayment = (id) => api.post(`/admin/payments/${id}/approve`);
+export const rejectAdminPayment = (id) => api.post(`/admin/payments/${id}/reject`);
 
 export default api;
