@@ -36,7 +36,7 @@ export const createAdminPlan = (data) => api.post('/admin/plans', data);
 export const updateAdminPlan = (id, data) => api.put(`/admin/plans/${id}`, data);
 export const deleteAdminPlan = (id) => api.delete(`/admin/plans/${id}`);
 export const getAdminPayments = (status) => api.get(`/admin/payments${status ? `?status=${status}` : ''}`);
-export const approveAdminPayment = (id) => api.post(`/admin/payments/${id}/approve`);
+export const approveAdminPayment = (id) => api.post(`/admin/payments/approve/${id}`);
 export const rejectAdminPayment = (id) => api.post(`/admin/payments/${id}/reject`);
 
 export default api;
